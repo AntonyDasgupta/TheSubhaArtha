@@ -6,13 +6,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST['password'];
 
     // Database connection
-    $conn = new mysqli("localhost", "root", "", "user");
+    $conn = new mysqli("localhost", "root", "", "info");
 
     if ($conn->connect_error) {
         die("Connection failed: " . $conn->connect_error);
     }
 
-    $sql = "SELECT * FROM users WHERE email = ?";
+    $sql = "SELECT * FROM user WHERE emailid = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $email);
     $stmt->execute();

@@ -11,7 +11,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // 2. Connect to database
-    $conn = new mysqli("localhost", "root", "", "subha_artha");
+    $conn = new mysqli("localhost", "root", "", "info");
 
     if ($conn->connect_error) {
         die("Connection failed: " . $conn->connect_error);
@@ -21,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
     // 4. Insert data
-    $sql = "INSERT INTO users (fullname, email, password) VALUES (?, ?, ?)";
+    $sql = "INSERT INTO user (user, emailid, password) VALUES (?, ?, ?)";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("sss", $fullname, $email, $hashedPassword);
 
