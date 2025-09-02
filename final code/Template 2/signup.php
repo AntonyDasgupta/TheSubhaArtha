@@ -1,39 +1,37 @@
 <?php
-session_start();
-include("connection.php");
-
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name  = $_POST['name'];
+    $fullname = $_POST['fullname'];
     $email = $_POST['email'];
-    $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
+    $password = $_POST['password'];
+    $confirm_password = $_POST['confirm_password'];
 
-    $check = $conn->query("SELECT * FROM users WHERE email='$email'");
-    if ($check->num_rows > 0) {
-        echo "Email already registered!";
-    } else {
-        $otp = rand(100000, 999999);
-        $_SESSION['otp'] = $otp;
-        $_SESSION['temp_email'] = $email;
-        $_SESSION['temp_name'] = $name;
-        $_SESSION['temp_pass'] = $password;
-
-        // Send OTP via email
-        $subject = "Your OTP Code - The Subha Artha";
-        $message = "Hello $name,\nYour OTP code is: $otp";
-        $headers = "From: no-reply@subhaartha.com";
-
-        if (mail($email, $subject, $message, $headers)) {
-            header("Location: otp.php");
-        } else {
-            echo "Failed to send OTP!";
-        }
+    // 1. Check if passwords match
+    if ($password !== $confirm_password) {
+        die("Passwords do not match. <a href='signup.html'>Go back</a>");
     }
+
+    // 2. Connect to database
+    $conn = new mysqli("localhost", "root", "", "subha_artha");
+
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
+
+    // 3. Hash password for security
+    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+    // 4. Insert data
+    $sql = "INSERT INTO users (fullname, email, password) VALUES (?, ?, ?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("sss", $fullname, $email, $hashedPassword);
+
+    if ($stmt->execute()) {
+        echo "Signup successful. <a href='login.html'>Login here</a>";
+    } else {
+        echo "Error: " . $conn->error;
+    }
+
+    $stmt->close();
+    $conn->close();
 }
 ?>
-
-<form method="POST">
-    <input type="text" name="name" placeholder="Full Name" required><br>
-    <input type="email" name="email" placeholder="Email" required><br>
-    <input type="password" name="password" placeholder="Password" required><br>
-    <button type="submit">Sign Up</button>
-</form>

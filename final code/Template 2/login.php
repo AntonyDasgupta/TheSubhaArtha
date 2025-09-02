@@ -1,34 +1,39 @@
 <?php
 session_start();
-include("connection.php");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['email'];
     $password = $_POST['password'];
 
-    $res = $conn->query("SELECT * FROM users WHERE email='$email'");
-    if ($res->num_rows > 0) {
-        $row = $res->fetch_assoc();
-        if (password_verify($password, $row['password'])) {
-            $_SESSION['user'] = $row['name'];
-            $_SESSION['email'] = $row['email'];
+    // Database connection
+    $conn = new mysqli("localhost", "root", "", "user");
 
-            if ($row['role'] == "admin") {
-                header("Location: admin.php");
-            } else {
-                header("Location: index.php");
-            }
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
+
+    $sql = "SELECT * FROM users WHERE email = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+
+        // Verify password
+        if (password_verify($password, $row['password'])) {
+            $_SESSION['email'] = $row['email'];
+            header("Location: dashboard.php"); // redirect to dashboard
+            exit();
         } else {
-            echo "Wrong password!";
+            echo "Invalid password.";
         }
     } else {
-        echo "User not found!";
+        echo "No user found with this email.";
     }
+
+    $stmt->close();
+    $conn->close();
 }
 ?>
-
-<form method="POST">
-    <input type="email" name="email" placeholder="Email" required><br>
-    <input type="password" name="password" placeholder="Password" required><br>
-    <button type="submit">Login</button>
-</form>
